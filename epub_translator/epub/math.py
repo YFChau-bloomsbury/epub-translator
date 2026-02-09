@@ -1,6 +1,6 @@
 from xml.etree.ElementTree import Element
 
-# 运算符映射表
+# Operator mapping table
 _OPERATOR_MAP = {
     "→": r"\rightarrow",
     "←": r"\leftarrow",
@@ -56,34 +56,34 @@ _OPERATOR_MAP = {
 def xml_to_latex(element: Element) -> str:
     tag = element.tag
 
-    # 根据元素类型进行转换
+    # Convert based on element type
     if tag == "math":
-        # 根元素，只处理子元素
+        # Root element, only process children
         return "".join(xml_to_latex(child) for child in element)
 
     elif tag == "mrow":
-        # 分组元素，递归处理所有子元素
+        # Group element, recursively process all children
         return "".join(xml_to_latex(child) for child in element)
 
     elif tag == "mi":
-        # 标识符（变量名）
+        # Identifier (variable name)
         text = element.text or ""
-        # 多字符标识符用 \mathrm
+        # Use \mathrm for multi-character identifiers
         if len(text) > 1:
             return f"\\mathrm{{{text}}}"
         return text
 
     elif tag == "mn":
-        # 数字
+        # Number
         return element.text or ""
 
     elif tag == "mo":
-        # 运算符
+        # Operator
         text = (element.text or "").strip()
         return _OPERATOR_MAP.get(text, text)
 
     elif tag == "mfrac":
-        # 分数
+        # Fraction
         children = list(element)
         if len(children) >= 2:
             numerator = xml_to_latex(children[0])
@@ -92,7 +92,7 @@ def xml_to_latex(element: Element) -> str:
         return ""
 
     elif tag == "msub":
-        # 下标
+        # Subscript
         children = list(element)
         if len(children) >= 2:
             base = xml_to_latex(children[0])
@@ -101,7 +101,7 @@ def xml_to_latex(element: Element) -> str:
         return ""
 
     elif tag == "msup":
-        # 上标
+        # Superscript
         children = list(element)
         if len(children) >= 2:
             base = xml_to_latex(children[0])
@@ -110,7 +110,7 @@ def xml_to_latex(element: Element) -> str:
         return ""
 
     elif tag == "msubsup":
-        # 同时有上下标
+        # Both subscript and superscript
         children = list(element)
         if len(children) >= 3:
             base = xml_to_latex(children[0])
@@ -120,12 +120,12 @@ def xml_to_latex(element: Element) -> str:
         return ""
 
     elif tag == "msqrt":
-        # 平方根
+        # Square root
         content = "".join(xml_to_latex(child) for child in element)
         return f"\\sqrt{{{content}}}"
 
     elif tag == "mroot":
-        # n次根
+        # n-th root
         children = list(element)
         if len(children) >= 2:
             base = xml_to_latex(children[0])
@@ -134,7 +134,7 @@ def xml_to_latex(element: Element) -> str:
         return ""
 
     elif tag == "munder":
-        # 下方符号
+        # Under-script symbol
         children = list(element)
         if len(children) >= 2:
             base = xml_to_latex(children[0])
@@ -143,7 +143,7 @@ def xml_to_latex(element: Element) -> str:
         return ""
 
     elif tag == "mover":
-        # 上方符号
+        # Over-script symbol
         children = list(element)
         if len(children) >= 2:
             base = xml_to_latex(children[0])
@@ -152,13 +152,13 @@ def xml_to_latex(element: Element) -> str:
         return ""
 
     elif tag == "munderover":
-        # 上下方符号
+        # Under-over-script symbol
         children = list(element)
         if len(children) >= 3:
             base = xml_to_latex(children[0])
             under = xml_to_latex(children[1])
             over = xml_to_latex(children[2])
-            # 特殊处理求和、积分等
+            # Special handling for sum, integral, etc.
             base_str = base.strip()
             if base_str in (r"\sum", r"\int", r"\prod"):
                 return f"{base}_{{{under}}}^{{{over}}}"
@@ -166,28 +166,28 @@ def xml_to_latex(element: Element) -> str:
         return ""
 
     elif tag == "mtext":
-        # 文本
+        # Text
         text = element.text or ""
         return f"\\text{{{text}}}"
 
     elif tag == "mspace":
-        # 空格
+        # Space
         return r"\,"
 
     elif tag == "mtable":
-        # 表格/矩阵
+        # Table/Matrix
         rows = [xml_to_latex(child) for child in element if child.tag.endswith("mtr")]
         return f"\\begin{{array}}{{{rows[0].count('&') + 1}}}\n" + "\\\\\n".join(rows) + "\n\\end{array}"
 
     elif tag == "mtr":
-        # 表格行
+        # Table row
         cells = [xml_to_latex(child) for child in element if child.tag.endswith("mtd")]
         return " & ".join(cells)
 
     elif tag == "mtd":
-        # 表格单元格
+        # Table cell
         return "".join(xml_to_latex(child) for child in element)
 
     else:
-        # 未知元素，递归处理子元素
+        # Unknown element, recursively process children
         return "".join(xml_to_latex(child) for child in element)

@@ -77,7 +77,7 @@ def _incision_of(segment: TextSegment, common_depth: int) -> int:
     else:
         block_diff = segment.block_depth - common_depth
         inline_diff = len(segment.parent_stack) - segment.block_depth
-    return block_diff * 3 + inline_diff  # 数字越大越容易被拆分
+    return block_diff * 3 + inline_diff  # larger number means more likely to be split
 
 
 def search_text_segments(root: Element) -> Generator[TextSegment, None, None]:

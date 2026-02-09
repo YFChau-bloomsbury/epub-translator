@@ -258,7 +258,7 @@ def _create_errors_group(
 
 
 def _calculate_error_weight(error: BlockError | InlineError | FoundInvalidIDError, level: int) -> int:
-    # BlockExpectedIDsError 和 InlineExpectedIDsError 的权重乘以 id2element 数量
+    # Weight of BlockExpectedIDsError and InlineExpectedIDsError is multiplied by the number of id2element
     if isinstance(error, (BlockExpectedIDsError, InlineExpectedIDsError)):
         return (_LEVEL_WEIGHT**level) * len(error.id2element)
     else:
@@ -376,21 +376,21 @@ def _format_inline_error(encoding: Encoding, error: InlineError | FoundInvalidID
         found = len(error.found_elements)
 
         if expected == 0 and found > 0:
-            # 情况1: 不应该有，但发现了
+            # Case 1: Should not exist, but was found
             return (
                 f"Found unexpected `<{tag}>` elements at `{selector}`. "
                 f"There should be none, but {found} were found. "
                 f"Fix: Remove all `<{tag}>` elements from this location."
             )
         elif expected > 0 and found == 0:
-            # 情况2: 应该有，但没找到
+            # Case 2: Should exist, but was not found
             return (
                 f"Missing `<{tag}>` elements at `{selector}`. "
                 f"Expected {expected}, but none were found. "
                 f"Fix: Add {expected} `<{tag}>` element(s) to this location."
             )
         elif found > expected:
-            # 情况3: 数量过多
+            # Case 3: Too many found
             extra = found - expected
             return (
                 f"Too many `<{tag}>` elements at `{selector}`. "
@@ -398,7 +398,7 @@ def _format_inline_error(encoding: Encoding, error: InlineError | FoundInvalidID
                 f"Fix: Remove {extra} `<{tag}>` element(s)."
             )
         else:
-            # 情况4: 数量过少
+            # Case 4: Too few found
             missing = expected - found
             return (
                 f"Too few `<{tag}>` elements at `{selector}`. "
@@ -429,7 +429,7 @@ def _build_inline_selector(
             return f"{element.tag}#{element_id}"
         tag = element.tag
 
-    # 路径：block#id > parent > ... > tag
+    # Path: block#id > parent > ... > tag
     block_tag = stack[0].tag if stack else "unknown"
     path_parts = [f"{block_tag}#{block_id}"]
 

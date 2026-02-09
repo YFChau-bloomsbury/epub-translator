@@ -68,7 +68,7 @@ def search_inline_segments(text_segments: Iterable[TextSegment]) -> Generator["I
                 stack_base_depth=stack_base_depth,
             )
 
-        # text_segment.depth 可视为它在 stack 中的 index，必须令 len(stack) == text_segment.depth + 1
+        # text_segment.depth can be seen as its index in stack, must set len(stack) == text_segment.depth + 1
         stack[-1].append(text_segment)
 
     if stack_data is not None:
@@ -110,10 +110,10 @@ class InlineSegment:
         self._children: list[TextSegment | InlineSegment] = children
         self._parent_stack: list[Element] = children[0].parent_stack[:depth]
 
-        # 每一组 tag 都对应一个 ids 列表。
-        # 若为空，说明该 tag 属性结构全同，没必要分配 id 以区分。
-        # 若非空，则表示 tag 下每一个 element 都有 id 属性。
-        # 注意，相同 tag 下的 element 要么全部有 id，要么全部都没有 id
+        # Each set of tags corresponds to a list of IDs.
+        # If empty, it means the tag's attribute structure is identical, and there's no need to assign an ID to distinguish.
+        # If not empty, it means every element under the tag has an id attribute.
+        # Note: Elements under the same tag must either all have an ID or all have no ID.
         self._child_tag2ids: dict[str, list[int]] = {}
         self._child_tag2count: dict[str, int] = {}
 
@@ -122,7 +122,7 @@ class InlineSegment:
 
         for tag, child_terms in terms.items():
             self._child_tag2count[tag] = len(child_terms)
-            if not is_the_same(  # 仅当 tag 彼此无法区分时才分配 id，以尽可能减少 id 的数量
+            if not is_the_same(  # Only assign IDs when tags are indistinguishable, to minimize the number of IDs
                 elements=(element_fingerprint(t.parent) for t in child_terms),
             ):
                 for child in child_terms:
@@ -280,7 +280,7 @@ class InlineSegment:
                 error.stack.insert(0, self.parent)
                 yield error
 
-    # 即便 self.validate(...) 的错误没有排除干净，也要尽可能匹配一个质量较高（尽力而为）的版本
+    # Even if errors in self.validate(...) are not fully cleared, try to match a higher quality (best effort) version
     def assign_attributes(self, template_element: Element) -> Element:
         assigned_element = Element(self.parent.tag, self.parent.attrib)
         if template_element.text and template_element.text.strip():
@@ -300,7 +300,8 @@ class InlineSegment:
 
         previous_assigned_child_element: Element | None = None
         for child_element in template_element:
-            # 只关心 child_element 是否是分割点，不关心它真实对应。极端情况下可能乱序，只好大致对上就行
+            # Only care if child_element is a split point, not its true correspondence.
+            # In extreme cases, order might be messy, so a general match is fine.
             child_text: str = ""
             if id(child_element) not in matched_child_element_ids:
                 child_text = plain_text(child_element)
@@ -331,7 +332,7 @@ class InlineSegment:
         children_and_elements: list[tuple[int, InlineSegment, Element]] = []
 
         for tag, orders_and_children in tag2children.items():
-            # 优先考虑 id 匹配，剩下的以自然顺序尽可能匹配
+            # Prioritize ID matching, then match remaining elements by natural order as much as possible
             ids = self._child_tag2ids.get(tag, [])
             matched_children_elements: list[Element | None] = [None] * len(orders_and_children)
             not_matched_elements: list[Element] = []
@@ -340,7 +341,7 @@ class InlineSegment:
                 id_order: int | None = None
                 child_id = id_in_element(child_element)
                 if child_id is not None and child_id not in used_ids:
-                    used_ids.add(child_id)  # 一个 id 只能用一次，防止重复
+                    used_ids.add(child_id)  # An ID can only be used once to prevent duplicates
                     try:
                         id_order = ids.index(child_id)
                     except ValueError:

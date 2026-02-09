@@ -19,25 +19,25 @@ class MockSegment(Segment[str]):
 
     @classmethod
     def from_text(cls, text: str) -> Self:
-        """从文本创建 MockSegment"""
+        """Create MockSegment from text"""
         return cls(payload=text, tokens=len(text))
 
     def truncate_after_head(self, remain_tokens: int) -> Self:
-        """保留开头的 remain_tokens 个字符"""
+        """Keep the first remain_tokens characters"""
         truncated_text = self.payload[:remain_tokens]
         return type(self)(payload=truncated_text, tokens=len(truncated_text))
 
     def truncate_before_tail(self, remain_tokens: int) -> Self:
-        """保留结尾的 remain_tokens 个字符"""
+        """Keep the last remain_tokens characters"""
         truncated_text = self.payload[-remain_tokens:] if remain_tokens > 0 else ""
         return type(self)(payload=truncated_text, tokens=len(truncated_text))
 
 
 class TestChunkBasic:
-    """测试 split_into_chunks 的基本功能"""
+    """Test the basic functionality of split_into_chunks"""
 
     def test_simple_chunking(self):
-        """测试简单的分块功能"""
+        """Test simple chunking functionality"""
         segments = [
             MockSegment.from_text("Hello"),  # 5 tokens
             MockSegment.from_text("World"),  # 5 tokens
@@ -46,10 +46,10 @@ class TestChunkBasic:
 
         chunks = list(split_into_chunks(segments, max_group_tokens=10))
 
-        # 应该至少有一个 chunk
+        # Should have at least one chunk
         assert len(chunks) > 0
 
-        # 验证 chunk 结构
+        # Verify chunk structure
         for chunk in chunks:
             assert hasattr(chunk, "head")
             assert hasattr(chunk, "body")
@@ -58,7 +58,7 @@ class TestChunkBasic:
             assert hasattr(chunk, "tail_remain_tokens")
 
     def test_chunk_contains_all_segments(self):
-        """验证所有 segment 都被包含在 chunks 中"""
+        """Verify that all segments are included in chunks"""
         segments = [
             MockSegment.from_text("A"),
             MockSegment.from_text("B"),
@@ -68,20 +68,20 @@ class TestChunkBasic:
 
         chunks = list(split_into_chunks(segments, max_group_tokens=2))
 
-        # 收集所有 chunk 中的内容
+        # Collect content from all chunks
         all_payloads = []
         for chunk in chunks:
             all_payloads.extend(seg.payload for seg in chunk.head)
             all_payloads.extend(seg.payload for seg in chunk.body)
             all_payloads.extend(seg.payload for seg in chunk.tail)
 
-        # 验证所有原始 segment 都出现了
+        # Verify all original segments are present
         original_payloads = [seg.payload for seg in segments]
         for payload in original_payloads:
-            assert payload in all_payloads, f"Payload '{payload}' 应该出现在 chunks 中"
+            assert payload in all_payloads, f"Payload '{payload}' should appear in chunks"
 
     def test_large_max_tokens(self):
-        """测试 max_tokens 很大时，所有内容在一个 chunk 中"""
+        """Test that all contents are in one chunk when max_tokens is very large"""
         segments = [
             MockSegment.from_text("Short"),
             MockSegment.from_text("Text"),
@@ -89,35 +89,35 @@ class TestChunkBasic:
 
         chunks = list(split_into_chunks(segments, max_group_tokens=1000))
 
-        # 应该只有一个 chunk
+        # Should have only one chunk
         assert len(chunks) >= 1
 
 
 class TestSplitterBasic:
-    """测试 splitter.split 的基本功能"""
+    """Test the basic functionality of splitter.split"""
 
     def test_simple_split(self):
-        """测试简单的 split 转换"""
+        """Test simple split transformation"""
         segments = [
             MockSegment.from_text("Hello"),
             MockSegment.from_text("World"),
         ]
 
         def transform(segs):
-            """简单的转换：转大写"""
+            """Simple transformation: to uppercase"""
             return [MockSegment.from_text(seg.payload.upper()) for seg in segs]
 
         results = list(split(segments, transform, max_group_tokens=10))
 
-        # 应该有结果
+        # Should have results平衡
         assert len(results) > 0
 
-        # 验证转换是否生效
+        # Verify transformation took effect
         result_texts = [r.payload for r in results]
         assert "HELLO" in result_texts or "WORLD" in result_texts
 
     def test_transform_preserves_body(self):
-        """验证只返回 body 部分的转换结果"""
+        """Verify transformation results that only return the body part"""
         segments = [
             MockSegment.from_text("A"),
             MockSegment.from_text("B"),
@@ -127,37 +127,37 @@ class TestSplitterBasic:
         ]
 
         def transform(segs):
-            """标记每个 segment"""
+            """Mark each segment"""
             return [MockSegment.from_text(f"[{seg.payload}]") for seg in segs]
 
         results = list(split(segments, transform, max_group_tokens=3))
 
-        # 验证结果
+        # Verify results
         result_texts = [r.payload for r in results]
         assert len(result_texts) > 0
 
 
 class TestEmptyTailSlicing:
-    """测试修复的 bug：当 tail 为空时的切片问题"""
+    """Test fixed bug: slicing problem when tail is empty"""
 
     def test_empty_tail_returns_correct_results(self):
-        """当 tail 为空时，应该返回正确的结果而不是空列表"""
+        """When tail is empty, correct results should be returned instead of an empty list"""
         segments = [
             MockSegment.from_text("First"),
             MockSegment.from_text("Second"),
         ]
 
         def identity_transform(segs):
-            """恒等转换"""
+            """Identity transformation"""
             return segs
 
         results = list(split(segments, identity_transform, max_group_tokens=20))
 
-        # 应该有结果（不应该因为 tail 为空而返回空列表）
-        assert len(results) > 0, "即使 tail 为空也应该返回结果"
+        # Should have results (should not return an empty list because tail is empty)
+        assert len(results) > 0, "Should return results even if tail is empty"
 
     def test_no_context_needed(self):
-        """当不需要上下文时（max_tokens 足够大），应该正常工作"""
+        """When no context is needed (max_tokens is large enough), it should work normally"""
         segments = [MockSegment.from_text("OnlyOne")]
 
         def transform(segs):
@@ -170,10 +170,10 @@ class TestEmptyTailSlicing:
 
 
 class TestTruncation:
-    """测试截断功能"""
+    """Test truncation functionality"""
 
     def test_truncate_after_head(self):
-        """测试 truncate_after_head 方法"""
+        """Test truncate_after_head method"""
         seg = MockSegment.from_text("HelloWorld")  # 10 tokens
 
         truncated = seg.truncate_after_head(5)
@@ -182,7 +182,7 @@ class TestTruncation:
         assert truncated.tokens == 5
 
     def test_truncate_before_tail(self):
-        """测试 truncate_before_tail 方法"""
+        """Test truncate_before_tail method"""
         seg = MockSegment.from_text("HelloWorld")  # 10 tokens
 
         truncated = seg.truncate_before_tail(5)
@@ -191,7 +191,7 @@ class TestTruncation:
         assert truncated.tokens == 5
 
     def test_truncate_with_zero_tokens(self):
-        """测试使用 0 tokens 截断"""
+        """Test truncation with 0 tokens"""
         seg = MockSegment.from_text("Test")
 
         truncated_head = seg.truncate_after_head(0)
@@ -204,53 +204,52 @@ class TestTruncation:
 
 
 class TestRemainTokensBug:
-    """测试修复的 bug：remain_tokens 在使用前被修改"""
+    """Test fixed bug: remain_tokens was modified before use"""
 
     def test_partial_remain_tokens(self):
-        """当 remain_tokens 小于 segment tokens 时，应该正确截断"""
-        # 创建一个足够大的 segment
+        """When remain_tokens is smaller than segment tokens, it should be truncated correctly"""
+        # Create a large enough segment
         segments = [
             MockSegment.from_text("A" * 20),  # 20 tokens
             MockSegment.from_text("B" * 10),  # 10 tokens
         ]
 
-        def transform(segs):
-            """保持原样"""
+            """Keep as is"""
             return segs
 
-        # 使用较小的 max_tokens 以触发截断
+        # Use smaller max_tokens to trigger truncation
         results = list(split(segments, transform, max_group_tokens=15))
 
-        # 应该有结果，且不会因为错误的截断而失败
+        # Should have results, and won't fail because of wrong truncation
         assert len(results) > 0
 
 
 class TestMultipleChunks:
-    """测试多个 chunks 的场景"""
+    """Test scenarios with multiple chunks"""
 
     def test_multiple_chunks_with_context(self):
-        """测试生成多个 chunks 时，上下文是否正确传递"""
+        """Test if context is passed correctly when multiple chunks are generated"""
         segments = [MockSegment.from_text(chr(65 + i)) for i in range(10)]  # A-J
 
         def transform(segs):
-            """添加前缀"""
+            """Add prefix"""
             return [MockSegment.from_text(f"T-{seg.payload}") for seg in segs]
 
         results = list(split(segments, transform, max_group_tokens=3))
 
-        # 应该有多个结果
+        # Should have multiple results
         assert len(results) > 0
 
-        # 验证转换生效
+        # Verify transformation took effect
         for result in results:
             assert result.payload.startswith("T-")
 
 
 class TestEdgeCases:
-    """测试边界情况"""
+    """Test edge cases"""
 
     def test_single_segment(self):
-        """测试单个 segment"""
+        """Test single segment"""
         segments = [MockSegment.from_text("Only")]
 
         def transform(segs):
@@ -262,7 +261,7 @@ class TestEdgeCases:
         assert results[0].payload == "OnlyOnly"
 
     def test_very_small_max_tokens(self):
-        """测试非常小的 max_tokens"""
+        """Test very small max_tokens"""
         segments = [
             MockSegment.from_text("AB"),
             MockSegment.from_text("CD"),
@@ -273,11 +272,11 @@ class TestEdgeCases:
 
         results = list(split(segments, transform, max_group_tokens=1))
 
-        # 即使 max_tokens 很小，也应该能处理
+        # Even if max_tokens is very small, it should be able to handle it
         assert len(results) > 0
 
     def test_empty_segments_list(self):
-        """测试空的 segments 列表"""
+        """Test empty segments list"""
         segments = []
 
         def transform(segs):
@@ -285,15 +284,15 @@ class TestEdgeCases:
 
         results = list(split(segments, transform, max_group_tokens=10))
 
-        # 空输入应该产生空输出
+        # Empty input should produce empty output
         assert len(results) == 0
 
 
 class TestTransformConsistency:
-    """测试转换的一致性"""
+    """Test consistency of transformation"""
 
     def test_transform_called_correctly(self):
-        """验证 transform 函数被正确调用"""
+        """Verify that transform function is called correctly"""
         segments = [
             MockSegment.from_text("X"),
             MockSegment.from_text("Y"),
@@ -309,11 +308,11 @@ class TestTransformConsistency:
 
         list(split(segments, counting_transform, max_group_tokens=5))
 
-        # transform 应该至少被调用一次
+        # transform should be called at least once
         assert call_count > 0
 
     def test_transform_receives_context(self):
-        """验证 transform 接收到完整的上下文（head + body + tail）"""
+        """Verify that transform receives complete context (head + body + tail)"""
         segments = [
             MockSegment.from_text("A"),
             MockSegment.from_text("B"),
@@ -329,10 +328,10 @@ class TestTransformConsistency:
 
         list(split(segments, recording_transform, max_group_tokens=2))
 
-        # 应该至少收到一次输入
+        # Should receive input at least once
         assert len(received_inputs) > 0
 
-        # 每次输入应该包含多个 segments（head + body + tail）
-        # 注意：根据分块策略，某些 chunk 可能只有 body
+        # Each input should contain multiple segments (head + body + tail)
+        # Note: Depending on the chunking strategy, some chunks might only have body
         for input_segs in received_inputs:
-            assert len(input_segs) >= 0  # 可能为空（虽然不太可能）
+            assert len(input_segs) >= 0  # Might be empty (though unlikely)

@@ -3,12 +3,12 @@ from xml.etree.ElementTree import Element
 from ..xml import iter_with_stack
 
 _QUOTE_MAPPING = {
-    # 法语引号
+    # French quotes
     "«": "",
     "»": "",
     "‹": "«",
     "›": "»",
-    # 中文书书名号
+    # Chinese book titles (guillemets)
     "《": "",
     "》": "",
     "〈": "《",

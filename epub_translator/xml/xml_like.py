@@ -64,7 +64,7 @@ class XMLLikeNode:
         self._attr_to_namespace: dict[str, str] = {}
 
         try:
-            # 不必判断类型，这是一个防御性极强的函数，可做到 shit >> XML
+            # No need to judge type, this is a highly defensive function, can turn mess into XML
             xml_content = self_close_void_elements(xml_content)
             self.element = self._extract_and_clean_namespaces(
                 element=fromstring(xml_content),
@@ -107,7 +107,7 @@ class XMLLikeNode:
         elif raw_content.startswith(b"\xfe\xff"):
             return "utf-16-be"
 
-        # 尝试从 XML 声明中提取编码：只读取前 1024 字节来查找 XML 声明
+        # Try to extract encoding from XML declaration: only read the first 1024 bytes to find the XML declaration
         header_bytes = raw_content[:1024]
         for try_encoding in ("utf-8", "utf-16-le", "utf-16-be", "iso-8859-1"):
             try:

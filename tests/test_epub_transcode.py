@@ -13,10 +13,10 @@ from epub_translator.translation.epub_transcode import (
 
 
 class TestEncodeToc:
-    """测试 Toc 对象的编码"""
+    """Test encoding of Toc objects"""
 
     def test_encode_simple_toc(self):
-        """测试编码简单的 Toc 对象"""
+        """Test encoding of simple Toc objects"""
         toc = Toc(
             title="Chapter 1",
             href="chapter1.xhtml",
@@ -36,7 +36,7 @@ class TestEncodeToc:
         assert title_elem.text == "Chapter 1"
 
     def test_encode_toc_without_optional_fields(self):
-        """测试编码没有可选字段的 Toc 对象"""
+        """Test encoding of Toc objects without optional fields"""
         toc = Toc(title="Introduction")
 
         elem = encode_toc(toc)
@@ -51,7 +51,7 @@ class TestEncodeToc:
         assert title_elem.text == "Introduction"
 
     def test_encode_nested_toc(self):
-        """测试编码嵌套的 Toc 对象"""
+        """Test encoding of nested Toc objects"""
         toc = Toc(
             title="Part 1",
             href="part1.xhtml",
@@ -71,7 +71,7 @@ class TestEncodeToc:
         assert title_elem is not None
         assert title_elem.text == "Part 1"
 
-        # 验证子节点
+        # Verify child nodes
         child_elems = elem.findall("toc-item")
         assert len(child_elems) == 2
 
@@ -86,7 +86,7 @@ class TestEncodeToc:
         assert child_elems[1].get("href") == "ch2.xhtml"
 
     def test_encode_deeply_nested_toc(self):
-        """测试编码多层嵌套的 Toc 对象"""
+        """Test encoding of deeply nested Toc objects"""
         toc = Toc(
             title="Book",
             children=[
@@ -108,7 +108,7 @@ class TestEncodeToc:
 
         elem = encode_toc(toc)
 
-        # 验证根节点
+        # Verify root node
         root_title = elem.find("title")
         assert root_title is not None
         assert root_title.text == "Book"
@@ -139,10 +139,10 @@ class TestEncodeToc:
 
 
 class TestDecodeToc:
-    """测试 Toc 对象的解码"""
+    """Test decoding of Toc objects"""
 
     def test_decode_simple_toc(self):
-        """测试解码简单的 Toc XML"""
+        """Test decoding of simple Toc XML"""
         xml_str = """
         <toc-item href="chapter1.xhtml" fragment="section1" id="ch1">
             <title>Chapter 1</title>
@@ -158,7 +158,7 @@ class TestDecodeToc:
         assert len(toc.children) == 0
 
     def test_decode_toc_without_optional_fields(self):
-        """测试解码没有可选字段的 Toc XML"""
+        """Test decoding of Toc XML without optional fields"""
         xml_str = """
         <toc-item>
             <title>Introduction</title>
@@ -174,7 +174,7 @@ class TestDecodeToc:
         assert len(toc.children) == 0
 
     def test_decode_nested_toc(self):
-        """测试解码嵌套的 Toc XML"""
+        """Test decoding of nested Toc XML"""
         xml_str = """
         <toc-item href="part1.xhtml" id="part1">
             <title>Part 1</title>
@@ -201,10 +201,10 @@ class TestDecodeToc:
 
 
 class TestTocRoundTrip:
-    """测试 Toc 编码和解码的往返一致性"""
+    """Test round-trip consistency of Toc encoding and decoding"""
 
     def test_simple_toc_roundtrip(self):
-        """测试简单 Toc 的往返"""
+        """Test round-trip of simple Toc"""
         original = Toc(
             title="Chapter 1",
             href="chapter1.xhtml",
@@ -222,7 +222,7 @@ class TestTocRoundTrip:
         assert len(decoded.children) == len(original.children)
 
     def test_nested_toc_roundtrip(self):
-        """测试嵌套 Toc 的往返"""
+        """Test round-trip of nested Toc"""
         original = Toc(
             title="Part 1",
             href="part1.xhtml",
@@ -255,7 +255,7 @@ class TestTocRoundTrip:
         compare_toc(original, decoded)
 
     def test_toc_list_roundtrip(self):
-        """测试 Toc 列表的往返"""
+        """Test round-trip of Toc list"""
         original_list = [
             Toc(title="Chapter 1", href="ch1.xhtml", id="ch1"),
             Toc(title="Chapter 2", href="ch2.xhtml", id="ch2"),
@@ -279,10 +279,10 @@ class TestTocRoundTrip:
 
 
 class TestEncodeMetadata:
-    """测试 MetadataField 列表的编码"""
+    """Test encoding of MetadataField lists"""
 
     def test_encode_single_field(self):
-        """测试编码单个元数据字段"""
+        """Test encoding of a single metadata field"""
         fields = [MetadataField(tag_name="title", text="The Little Prince")]
 
         elem = encode_metadata(fields)
@@ -295,7 +295,7 @@ class TestEncodeMetadata:
         assert field_elems[0].text == "The Little Prince"
 
     def test_encode_multiple_fields(self):
-        """测试编码多个元数据字段"""
+        """Test encoding of multiple metadata fields"""
         fields = [
             MetadataField(tag_name="title", text="The Little Prince"),
             MetadataField(tag_name="creator", text="Antoine de Saint-Exupéry"),
@@ -322,7 +322,7 @@ class TestEncodeMetadata:
         assert field_elems[3].text == "Fiction"
 
     def test_encode_multiple_same_tag(self):
-        """测试编码多个相同标签的字段"""
+        """Test encoding of fields with the same tag"""
         fields = [
             MetadataField(tag_name="creator", text="Author 1"),
             MetadataField(tag_name="creator", text="Author 2"),
@@ -344,7 +344,7 @@ class TestEncodeMetadata:
         assert field_elems[2].text == "Book Title"
 
     def test_encode_empty_list(self):
-        """测试编码空列表"""
+        """Test encoding of empty list"""
         fields = []
 
         elem = encode_metadata(fields)
@@ -355,10 +355,10 @@ class TestEncodeMetadata:
 
 
 class TestDecodeMetadata:
-    """测试 MetadataField 列表的解码"""
+    """Test decoding of MetadataField lists"""
 
     def test_decode_single_field(self):
-        """测试解码单个元数据字段"""
+        """Test decoding of a single metadata field"""
         xml_str = """
         <metadata-list>
             <field tag="title">The Little Prince</field>
@@ -372,7 +372,7 @@ class TestDecodeMetadata:
         assert fields[0].text == "The Little Prince"
 
     def test_decode_multiple_fields(self):
-        """测试解码多个元数据字段"""
+        """Test decoding of multiple metadata fields"""
         xml_str = """
         <metadata-list>
             <field tag="title">The Little Prince</field>
@@ -392,7 +392,7 @@ class TestDecodeMetadata:
         assert fields[2].text == "Houghton Mifflin"
 
     def test_decode_empty_list(self):
-        """测试解码空列表"""
+        """Test decoding of empty list"""
         xml_str = "<metadata-list></metadata-list>"
         elem = ET.fromstring(xml_str)
         fields = decode_metadata(elem)
@@ -401,10 +401,10 @@ class TestDecodeMetadata:
 
 
 class TestMetadataRoundTrip:
-    """测试 MetadataField 编码和解码的往返一致性"""
+    """Test round-trip consistency of MetadataField encoding and decoding"""
 
     def test_single_field_roundtrip(self):
-        """测试单个字段的往返"""
+        """Test round-trip of a single field"""
         original = [MetadataField(tag_name="title", text="Test Title")]
 
         elem = encode_metadata(original)
@@ -415,7 +415,7 @@ class TestMetadataRoundTrip:
         assert decoded[0].text == original[0].text
 
     def test_multiple_fields_roundtrip(self):
-        """测试多个字段的往返"""
+        """Test round-trip of multiple fields"""
         original = [
             MetadataField(tag_name="title", text="The Little Prince"),
             MetadataField(tag_name="creator", text="Antoine de Saint-Exupéry"),
@@ -433,7 +433,7 @@ class TestMetadataRoundTrip:
             assert dec.text == orig.text
 
     def test_special_characters_roundtrip(self):
-        """测试特殊字符的往返"""
+        """Test round-trip of special characters"""
         original = [
             MetadataField(tag_name="title", text='Title with <special> & "quotes" & 中文'),
             MetadataField(tag_name="description", text="Line 1\nLine 2\nLine 3"),
@@ -448,10 +448,10 @@ class TestMetadataRoundTrip:
 
 
 class TestEdgeCases:
-    """测试边缘情况"""
+    """Test edge cases"""
 
     def test_toc_with_special_characters(self):
-        """测试包含特殊字符的 Toc"""
+        """Test Toc with special characters"""
         toc = Toc(
             title="Chapter <1> & \"Quotes\" & 'Apostrophes' & 测试",
             href="special.xhtml",
@@ -466,7 +466,7 @@ class TestEdgeCases:
         assert decoded.id == toc.id
 
     def test_metadata_with_newlines(self):
-        """测试包含换行符的元数据"""
+        """Test metadata with newlines"""
         fields = [
             MetadataField(
                 tag_name="description",
@@ -481,7 +481,7 @@ class TestEdgeCases:
         assert decoded[0].text == fields[0].text
 
     def test_metadata_with_long_text(self):
-        """测试包含长文本的元数据"""
+        """Test metadata with long text"""
         long_text = "A" * 10000
         fields = [MetadataField(tag_name="description", text=long_text)]
 

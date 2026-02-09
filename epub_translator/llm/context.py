@@ -106,7 +106,7 @@ class LLMContext:
                 permanent_name = temp_file.name.rsplit(".", 2)[0] + ".txt"
                 permanent_file = temp_file.parent / permanent_name
 
-                with _CACHE_COMMIT_LOCK:  # 多线程下的线程安全
+                with _CACHE_COMMIT_LOCK:  # Thread safety under multi-threading
                     if permanent_file.exists():
                         temp_file.unlink()
                     else:

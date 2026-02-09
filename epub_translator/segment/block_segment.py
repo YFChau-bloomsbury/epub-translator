@@ -18,7 +18,7 @@ class BlockSubmitter:
 
 @dataclass
 class BlockWrongTagError:
-    block: tuple[int, Element] | None  # (block_id, block_element) | None 表示根元素
+    block: tuple[int, Element] | None  # (block_id, block_element) | None means root element
     expected_tag: str
     instead_tag: str
 

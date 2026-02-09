@@ -11,19 +11,19 @@ from .zip import Zip
 @dataclass
 class Toc:
     """
-    EPUB 2.0 对应关系:
+    EPUB 2.0 mapping:
         - title <-> <navLabel><text>
-        - href <-> <content src> (不包含 # 后的部分)
-        - fragment <-> <content src> (# 后的部分)
-        - children <-> 嵌套的 <navPoint>
+        - href <-> <content src> (excluding the part after #)
+        - fragment <-> <content src> (the part after #)
+        - children <-> nested <navPoint>
         - id <-> <navPoint id>
 
-    EPUB 3.0 对应关系:
-        - title <-> <a> 标签的文本内容
-        - href <-> <a href> (不包含 # 后的部分)
-        - fragment <-> <a href> (# 后的部分)
-        - children <-> 嵌套的 <ol><li>
-        - id <-> <li id> 或 <a id>
+    EPUB 3.0 mapping:
+        - title <-> text content of <a> tag
+        - href <-> <a href> (excluding the part after #)
+        - fragment <-> <a href> (the part after #)
+        - children <-> nested <ol><li>
+        - id <-> <li id> or <a id>
     """
 
     title: str
@@ -104,7 +104,7 @@ def _find_toc_path(zip: Zip, version: int) -> Path | None:
             return None
 
         if version == 2:
-            # EPUB 2: 查找 NCX 文件 (media-type="application/x-dtbncx+xml")
+            # EPUB 2: Find NCX file (media-type="application/x-dtbncx+xml")
             for item in manifest.findall("item"):
                 media_type = item.get("media-type")
                 if media_type == "application/x-dtbncx+xml":
@@ -112,7 +112,7 @@ def _find_toc_path(zip: Zip, version: int) -> Path | None:
                     if href:
                         return opf_dir / href
         else:
-            # EPUB 3: 查找 nav 文件 (properties="nav")
+            # EPUB 3: Find nav file (properties="nav")
             for item in manifest.findall("item"):
                 properties = item.get("properties", "")
                 if "nav" in properties.split():
@@ -429,12 +429,12 @@ def _split_href(href: str) -> tuple[str | None, str | None]:
 
 def _match_toc_with_elements(toc_list: list[Toc], elements: list[Element]) -> list[tuple[Toc, Element | None]]:
     """
-    使用混合策略匹配 Toc 对象和 XML 元素
+    Use a mixed strategy to match Toc objects with XML elements
 
-    策略优先级：
-    1. 通过 id 匹配
-    2. 通过 href 匹配
-    3. 通过位置匹配
+    Strategy priority:
+    1. Match by id
+    2. Match by href
+    3. Match by position
     """
     result = []
     used_elements = set()
@@ -474,12 +474,12 @@ def _match_toc_with_elements(toc_list: list[Toc], elements: list[Element]) -> li
 
 
 def _extract_href_from_element(elem: Element) -> str | None:
-    # NCX 格式：查找 content/@src
+    # NCX format: Find content/@src
     content = elem.find(".//content")
     if content is not None:
         return content.get("src")
 
-    # nav 格式：查找 a/@href
+    # nav format: Find a/@href
     a = elem.find(".//a")
     if a is not None:
         return a.get("href")

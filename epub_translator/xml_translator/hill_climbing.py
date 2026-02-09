@@ -17,8 +17,8 @@ class _BlockStatus:
     submitter: BlockSubmitter
 
 
-# 以爬山算法，将 LLM 中提交的内容中挑选出完成度更高的部分。
-# 它通过拒绝每个子部分的相对低完成度提交，锁定每个子部分只能往更高完成度的方向移动
+# Use hill climbing algorithm to pick parts with higher completeness from the content submitted in LLM.
+# It works by rejecting submissions with lower relative completeness for each sub-part, locking each sub-part to only move in the direction of higher completeness.
 class HillClimbing:
     def __init__(
         self,
@@ -56,7 +56,7 @@ class HillClimbing:
         error_message, block_weights = self._validate_block_weights_and_error_message(element)
 
         for submitter in self._block_segment.submit(element):
-            weight: int = 0  # 未出现在 block_weights 说明没有错误，已完成
+            weight: int = 0  # Not appearing in block_weights means no errors, completed
             if block_weights:
                 weight = block_weights.get(submitter.id, 0)
             status = self._block_statuses.get(submitter.id, None)
@@ -84,7 +84,8 @@ class HillClimbing:
             status = self._block_statuses.get(block_id, None)
             block_weights[block_id] = block_group.weight
             if status is not None and status.weight > block_group.weight:
-                # 本轮完成度得到改善（weight 下降）应该排后，让出注意力给完成度尚未改善的部分
+                # If completeness improved in this round (weight decreased), it should be prioritized lower
+                # to give attention to parts where completeness has not yet improved.
                 for child_error in block_group.errors:
                     child_error.level -= LEVEL_DEPTH
 

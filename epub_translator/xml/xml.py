@@ -20,7 +20,7 @@ def index_in_parent(parent: Element, element: Element) -> int | None:
 
 
 def iter_with_stack(element: Element) -> Generator[tuple[list[Element], Element], None, None]:
-    """先序遍历：yield parent_path, element"""
+    """Pre-order traversal: yield parent_path, element"""
     stack: list[list[Element]] = [[element]]
     while stack:
         current_path = stack.pop()

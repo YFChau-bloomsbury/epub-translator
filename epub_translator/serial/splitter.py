@@ -26,7 +26,7 @@ def split(
         )
         transformed = transform(head + group.body + tail)
 
-        if len(tail) > 0:  # 避免 target[N:-0] 切片错误
+        if len(tail) > 0:  # Avoid target[N:-0] slicing error
             yield from transformed[len(head) : -len(tail)]
         else:
             yield from transformed[len(head) :]

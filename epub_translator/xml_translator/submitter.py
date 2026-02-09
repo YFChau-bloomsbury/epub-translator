@@ -86,7 +86,7 @@ class _Submitter:
         combined = self._combine_text_segments(node.tail_text_segments)
 
         if combined is not None:
-            # 在 APPEND_BLOCK 模式下，如果是 inline tag，则在文本前面加空格
+            # In APPEND_BLOCK mode, if it's an inline tag, add a space before the text
             if self._action == SubmitKind.APPEND_BLOCK and is_inline_element(combined) and combined.text:
                 combined.text = " " + combined.text
             parent.insert(index + 1, combined)
@@ -124,8 +124,8 @@ class _Submitter:
         for text_segments, child_node in node.items:
             anchor_element = _find_anchor_in_parent(node.raw_element, child_node.raw_element)
             if anchor_element is None:
-                # 防御性编程：理论上 anchor_element 不应该为 None，
-                #           因为 _nest_nodes 已经通过 _check_includes 验证了包含关系。
+                # Defensive programming: Theoretically anchor_element should not be None,
+                # because _nest_nodes has already verified the inclusion relationship via _check_includes.
                 continue
 
             tail_element = tail_elements.get(id(anchor_element), None)
@@ -166,7 +166,7 @@ class _Submitter:
             tail_preserved_elements = self._remove_elements_after_tail(
                 node_element=node.raw_element,
                 tail_element=last_tail_element,
-                end_index=None,  # None 表示删除到末尾
+                end_index=None,  # None means delete to the end
             )
         self._append_combined_after_tail(
             node_element=node.raw_element,
@@ -240,7 +240,7 @@ class _Submitter:
             else:
                 ref_index = index_of_parent(node_element, anchor_element)
                 if ref_index > 0:
-                    # 添加到前一个元素的 tail
+                    # Add to the tail of the previous element
                     prev_element = node_element[ref_index - 1]
                     prev_element.tail = self._append_text_in_element(
                         origin_text=prev_element.tail,
@@ -248,7 +248,7 @@ class _Submitter:
                         will_inject_space=will_inject_space,
                     )
                 else:
-                    # ref_element 是第一个元素，添加到 node_element.text
+                    # ref_element is the first element, add to node_element.text
                     node_element.text = self._append_text_in_element(
                         origin_text=node_element.text,
                         append_text=combined.text,
@@ -260,14 +260,14 @@ class _Submitter:
         elif append_to_end:
             insert_position = len(node_element)
         elif anchor_element is not None:
-            # 使用 ref_element 来定位插入位置
-            # 如果文本被添加到前一个元素的 tail，则在前一个元素之后插入
+            # Use ref_element to locate the insertion position
+            # If text was added to the tail of the previous element, insert after the previous element
             ref_index = index_of_parent(node_element, anchor_element)
             if ref_index > 0:
-                # 在前一个元素之后插入
+                # Insert after the previous element
                 insert_position = ref_index
             else:
-                # ref_element 是第一个元素，插入到开头
+                # ref_element is the first element, insert at the beginning
                 insert_position = 0
         else:
             insert_position = 0
@@ -298,22 +298,24 @@ class _Submitter:
 
 
 def _nest_nodes(mappings: list[InlineSegmentMapping]) -> Generator[_Node, None, None]:
-    # 需要翻译的文字会被嵌套到两种不同的结构中。
-    # 最常见的的是 peak 结构，例如如下结构，没有任何子结构（inline 标签不是视为子结构）。
-    # 可直接文本替换或追加。
+    # Text that needs translation will be nested into two different structures.
+    # The most common is the peak structure, for example the following structure, without any sub-structure
+    # (inline tags are not considered sub-structures).
+    # Can be directly replaced or appended with text.
     # <div>Some text <b>bold text</b> more text.</div>
     #
-    # 但是还有一种少见的 platform 结构，它内部被其他 peak/platform 切割。
+    # However, there is also a rare platform structure, which is cut internally by other peak/platform structures.
     #   <div>
     #     Some text before.
-    #     <!-- 如下 peak 将它的阅读流切段 -->
+    #     <!-- The following peak cuts its reading flow -->
     #     <div>Paragraph 1.</div>
     #     Some text in between.
     #   </div>
-    # 如果直接对它进行替换或追加，读者阅读流会被破坏，从而读起来怪异。
-    # 正是因为这种结构的存在，必须还原成树型结构，然后用特殊的方式来处理 platform 结构。
+    # If directly replaced or appended, the reader's flow will be broken, making it read weirdly.
+    # Because of this structure, it must be restored to a tree structure, and then the platform structure
+    # is handled in a special way.
     #
-    # 总之，我们假设 95% 的阅读体验由 peak 提供，但为兼顾剩下的 platform 结构，故加此步骤。
+    # In short, we assume 95% of the reading experience is provided by peak, but to accommodate the remaining platform structures, this step is added.
     stack: list[_Node] = []
 
     for block_element, text_segments in mappings:

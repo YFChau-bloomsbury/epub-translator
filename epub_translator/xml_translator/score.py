@@ -43,9 +43,9 @@ def truncate_score_segment(
 ):
     fixed_score = score_segment.score - len(score_segment.text_tokens)
     if remain_score <= fixed_score:
-        # 裁剪仅能减少 text 部分的 tokens 数。
-        # 而 XML 本身头尾占用的 tokens 数，以及 ID 占用加权分属于 fixed_score 部分，无法裁剪
-        # 当发现将文字删光后才能达标时，不如直接放弃整段内容
+        # Truncation can only reduce tokens in the text part.
+        # However, the tokens occupied by the XML header and tail, and the weight score occupied by the ID, belong to the fixed_score part and cannot be truncated.
+        # When it is found that the target can only be reached by deleting all the text, it is better to give up the entire content.
         return None
 
     remain_text_tokens_count = remain_score - fixed_score

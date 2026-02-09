@@ -1,7 +1,7 @@
 """
-EPUB 数据结构与 XML 的编码/解码转换
+EPUB data structures and XML encoding/decoding conversion.
 
-将 Toc 和 MetadataField 等数据结构转换为 XML Element，以便进行翻译处理。
+Convert data structures such as Toc and MetadataField into XML Elements for translation processing.
 """
 
 from xml.etree.ElementTree import Element

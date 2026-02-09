@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-检测 temp/logs 中日志文件的 XML 模板是否存在重复 ID。
+Check for duplicate IDs in XML templates within log files in temp/logs.
 
-每个 XML 根节点检查一次，因为同一个 XML 可能出现 1-3 次（请求、响应、重试）。
-只检查根节点内部的 ID 是否重复。
+Each XML root node is checked once, as the same XML may appear 1-3 times (request, response, retry).
+Only IDs within the root node are checked for duplicates.
 """
 
 import re
@@ -16,9 +16,9 @@ from xml.etree import ElementTree as ET
 
 def extract_xml_blocks(log_content: str) -> list[tuple[str, int, int]]:
     """
-    从日志内容中提取所有 XML 代码块
+    Extract all XML code blocks from log content.
 
-    返回: [(xml_content, start_line, end_line), ...]
+    Returns: [(xml_content, start_line, end_line), ...]
     """
     lines = log_content.split("\n")
     blocks = []
@@ -26,18 +26,18 @@ def extract_xml_blocks(log_content: str) -> list[tuple[str, int, int]]:
 
     while i < len(lines):
         line = lines[i]
-        # 检查是否是 XML 代码块开始
+        # Check if it's the start of an XML code block
         if re.match(r"```[Xx][Mm][Ll]", line):
-            start_line = i + 1  # 行号从 1 开始，且跳过 ```XML 那一行
+            start_line = i + 1  # Line numbers start at 1, and skip the ```XML line
             xml_lines = []
             i += 1
 
-            # 收集 XML 内容直到遇到 ```
+            # Collect XML content until ``` is encountered
             while i < len(lines):
                 if lines[i].strip() == "```":
-                    end_line = i  # 结束行号（不包含 ``` 那一行）
+                    end_line = i  # End line number (excluding the ``` line)
                     xml_content = "\n".join(xml_lines)
-                    blocks.append((xml_content, start_line + 1, end_line))  # +1 转为 1-based
+                    blocks.append((xml_content, start_line + 1, end_line))  # +1 to convert to 1-based
                     break
                 xml_lines.append(lines[i])
                 i += 1
@@ -48,14 +48,14 @@ def extract_xml_blocks(log_content: str) -> list[tuple[str, int, int]]:
 
 
 def extract_ids_from_xml(xml_string: str) -> list[str]:
-    """从 XML 字符串中提取所有 id 属性"""
+    """Extract all id attributes from an XML string"""
     try:
         root = ET.fromstring(xml_string)
         ids = []
 
-        # 遍历所有元素（不包括根节点）
+        # Traverse all elements (excluding the root node)
         for element in root.iter():
-            if element is not root:  # 跳过根节点
+            if element is not root:  # Skip root node
                 id_value = element.get("id")
                 if id_value is not None:
                     ids.append(id_value)
@@ -67,7 +67,7 @@ def extract_ids_from_xml(xml_string: str) -> list[str]:
 
 
 def check_duplicate_ids(ids: list[str]) -> list[str]:
-    """检查 ID 列表中是否有重复，返回重复的 ID"""
+    """Check for duplicates in a list of IDs and return the duplicate IDs"""
     counter = Counter(ids)
     duplicates = [id_val for id_val, count in counter.items() if count > 1]
     return duplicates
@@ -75,9 +75,9 @@ def check_duplicate_ids(ids: list[str]) -> list[str]:
 
 def check_log_file(log_file: Path) -> dict[str, Any]:
     """
-    检查单个日志文件
+    Check a single log file.
 
-    返回格式:
+    Returns format:
     {
         'file': Path,
         'has_duplicates': bool,
@@ -98,11 +98,11 @@ def check_log_file(log_file: Path) -> dict[str, Any]:
         content = log_file.read_text(encoding="utf-8")
         xml_blocks = extract_xml_blocks(content)
 
-        # 为了去重，我们跟踪已检查过的 XML 内容
+        # To avoid duplication, we track checked XML content
         seen_xmls = set()
 
         for i, (xml_block, start_line, end_line) in enumerate(xml_blocks):
-            # 去重：如果已经检查过这个 XML，跳过
+            # De-duplication: if this XML has already been checked, skip it
             if xml_block in seen_xmls:
                 continue
             seen_xmls.add(xml_block)
@@ -132,7 +132,7 @@ def check_log_file(log_file: Path) -> dict[str, Any]:
 
 
 def main():
-    # 获取 temp/logs 目录
+    # Get temp/logs directory
     script_dir = Path(__file__).parent
     logs_dir = script_dir.parent / "temp" / "logs"
 
@@ -140,7 +140,7 @@ def main():
         print(f"Error: Logs directory not found: {logs_dir}")
         sys.exit(1)
 
-    # 查找所有 .log 文件
+    # Find all .log files
     log_files = sorted(logs_dir.glob("*.log"))
 
     if not log_files:
@@ -150,7 +150,7 @@ def main():
     print(f"Checking {len(log_files)} log files in {logs_dir}...")
     print()
 
-    # 检查每个文件
+    # Check each file
     total_issues = 0
     problematic_files = []
 
@@ -162,7 +162,7 @@ def main():
             problematic_files.append(result)
 
             for block_info in result["xml_blocks"]:
-                # VSCode 可点击格式: file_path:line_start-line_end
+                # VSCode clickable format: file_path:line_start-line_end
                 file_location = f"{log_file.absolute()}:{block_info['start_line']}-{block_info['end_line']}"
                 print(f"❌ {file_location}")
                 print(f"  XML block #{block_info['index']}:")
@@ -170,7 +170,7 @@ def main():
                     print(f"    - ID '{dup_id}' appears {count} times")
                 print()
 
-    # 总结
+    # Summary
     print("=" * 60)
     if total_issues == 0:
         print("✅ No duplicate IDs found in any log files!")
@@ -178,7 +178,7 @@ def main():
         print(f"❌ Found duplicate IDs in {total_issues} log file(s)")
     print("=" * 60)
 
-    # 返回非零退出码如果有问题
+    # Return non-zero exit code if there are issues
     sys.exit(1 if total_issues > 0 else 0)
 
 

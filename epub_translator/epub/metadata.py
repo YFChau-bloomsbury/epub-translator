@@ -14,8 +14,8 @@ class MetadataField:
 
 @dataclass
 class MetadataContext:
-    opf_path: Path  # OPF 文件路径
-    xml_node: XMLLikeNode  # XMLLikeNode 对象，保留原始文件信息
+    opf_path: Path  # Path to the OPF file
+    xml_node: XMLLikeNode  # XMLLikeNode object, preserving original file information
 
 
 SKIP_FIELDS = frozenset(
